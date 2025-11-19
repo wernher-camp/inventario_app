@@ -35,6 +35,23 @@ app.post("/api/productos", (req, res) => {
     });
 });
 
+// Editar producto
+app.put("/api/productos/:id", (req, res) => {
+    const { id } = req.params;
+    const { nombre, descripcion, precio, imagen_url, stock } = req.body;
+
+    const sql = `
+        UPDATE productos 
+        SET nombre=?, descripcion=?, precio=?, imagen_url=?, stock=?
+        WHERE id=?
+    `;
+
+    db.query(sql, [nombre, descripcion, precio, imagen_url, stock, id], (err) => {
+        if (err) return res.status(500).json({ error: err });
+        res.json({ message: "Producto actualizado" });
+    });
+});
+
 // Eliminar
 app.delete("/api/productos/:id", (req, res) => {
     const { id } = req.params;
