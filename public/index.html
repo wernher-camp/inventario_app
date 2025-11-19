@@ -1,21 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="stylesheet" href="estilos.css">
     <meta charset="UTF-8">
-    <title>Inventario</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Web</title>
+    <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
 
-<h1>Inventario General</h1>
+<header>
+    <h1>Inventario Web</h1>
+</header>
 
-<div id="productos"></div>
+<section id="formulario">
+    <h2>Agregar Producto</h2>
+    <input id="nombre" placeholder="Nombre">
+    <input id="descripcion" placeholder="Descripción">
+    <input id="precio" type="number" placeholder="Precio">
+    <input id="imagen_url" placeholder="URL de imagen (nube)">
+    <input id="stock" type="number" placeholder="Stock">
+    <button onclick="agregar()">Agregar</button>
+</section>
 
-<h2>Agregar producto</h2>
-<input id="nombre" placeholder="Nombre">
-<input id="cantidad" type="number" placeholder="Cantidad">
-<input id="imagen" placeholder="URL de imagen en la nube">
-<button onclick="agregar()">Agregar</button>
+<section>
+    <h2>Listado de Productos</h2>
+    <div id="lista" class="grid"></div>
+</section>
 
 <script src="app.js"></script>
 </body>
