@@ -1,35 +1,43 @@
 import express from "express";
 import cors from "cors";
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
+import dotenv from "dotenv";
+import mysql from "mysql2/promise";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ---- BASE DE DATOS ----
-let db;
-(async () => {
-  db = await open({
-    filename: "./inventario.db",
-    driver: sqlite3.Database
-  });
+// -------- MYSQL CONNECTION -------------
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME
+});
 
-  await db.exec(`
+// Crear tabla si no existe
+async function initDB() {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS productos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nombre TEXT,
-      cantidad INTEGER,
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      nombre VARCHAR(255),
+      cantidad INT,
       imagen TEXT
     );
   `);
-})();
+  console.log("✔ Base de datos lista");
+}
 
-// ---- RUTAS ----
+initDB();
 
-// Listar productos
+// ---------- RUTAS API ----------------
+
+// Obtener productos
 app.get("/api/productos", async (req, res) => {
-  const rows = await db.all("SELECT * FROM productos");
+  const [rows] = await pool.query("SELECT * FROM productos ORDER BY id DESC");
   res.json(rows);
 });
 
@@ -37,16 +45,12 @@ app.get("/api/productos", async (req, res) => {
 app.post("/api/productos", async (req, res) => {
   const { nombre, cantidad, imagen } = req.body;
 
-  if (!nombre || !cantidad) {
-    return res.status(400).json({ error: "Faltan datos" });
-  }
-
-  await db.run(
-    "INSERT INTO productos (nombre, cantidad, imagen) VALUES (?,?,?)",
-    [nombre, cantidad, imagen || ""]
+  await pool.query(
+    "INSERT INTO productos (nombre, cantidad, imagen) VALUES (?, ?, ?)",
+    [nombre, cantidad, imagen]
   );
 
-  res.json({ message: "Producto agregado" });
+  res.json({ message: "Producto agregado correctamente" });
 });
 
 // Editar producto
@@ -54,21 +58,23 @@ app.put("/api/productos/:id", async (req, res) => {
   const { id } = req.params;
   const { nombre, cantidad, imagen } = req.body;
 
-  await db.run(
+  await pool.query(
     "UPDATE productos SET nombre=?, cantidad=?, imagen=? WHERE id=?",
-    [nombre, cantidad, imagen || "", id]
+    [nombre, cantidad, imagen, id]
   );
 
   res.json({ message: "Producto actualizado" });
 });
 
-// Borrar producto
+// Eliminar producto
 app.delete("/api/productos/:id", async (req, res) => {
   const { id } = req.params;
-  await db.run("DELETE FROM productos WHERE id=?", [id]);
+
+  await pool.query("DELETE FROM productos WHERE id=?", [id]);
+
   res.json({ message: "Producto eliminado" });
 });
 
-// ---- SERVIDOR ----
+// ----------- SERVER ---------------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Servidor en puerto " + PORT));
+app.listen(PORT, () => console.log("Servidor corriendo en " + PORT));
