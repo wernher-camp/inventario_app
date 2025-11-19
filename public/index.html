@@ -1,31 +1,40 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario Web</title>
-    <link rel="stylesheet" href="estilos.css">
+<meta charset="UTF-8">
+<title>Inventario</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
 
-<header>
-    <h1>Inventario Web</h1>
-</header>
+<body class="bg-light">
 
-<section id="formulario">
-    <h2>Agregar Producto</h2>
-    <input id="nombre" placeholder="Nombre">
-    <input id="descripcion" placeholder="Descripción">
-    <input id="precio" type="number" placeholder="Precio">
-    <input id="imagen_url" placeholder="URL de imagen (nube)">
-    <input id="stock" type="number" placeholder="Stock">
-    <button onclick="agregar()">Agregar</button>
-</section>
+<div class="container mt-4">
+    <h1 class="text-center mb-3">Inventario</h1>
 
-<section>
-    <h2>Listado de Productos</h2>
-    <div id="lista" class="grid"></div>
-</section>
+    <!-- FORMULARIO -->
+    <div class="card p-3">
+        <input id="nombre" class="form-control mb-2" placeholder="Nombre del producto">
+        <input id="cantidad" class="form-control mb-2" type="number" placeholder="Cantidad">
+        <input id="imagen" class="form-control mb-2" placeholder="URL de imagen (Drive, Dropbox, etc.)">
+        <button onclick="agregar()" class="btn btn-primary w-100">Agregar Producto</button>
+    </div>
+
+    <hr>
+
+    <!-- TABLA -->
+    <table class="table table-bordered table-striped mt-4">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Imagen</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tabla"></tbody>
+    </table>
+</div>
 
 <script src="app.js"></script>
 </body>
