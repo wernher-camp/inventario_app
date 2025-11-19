@@ -1,63 +1,82 @@
-const API = "https://inventarioapp-production-7e45.up.railway.app/api/productos";
-let editando = null;
+const API = "/api/productos";
+const lista = document.getElementById("lista");
 
 async function cargar() {
-    const res = await fetch(API);
-    const data = await res.json();
+  const res = await fetch(API);
+  const datos = await res.json();
 
-    let html = "";
-    data.forEach(p => {
-        html += `
-        <tr>
-            <td>${p.id}</td>
-            <td>${p.nombre}</td>
-            <td>${p.cantidad}</td>
-            <td><a href="${p.imagen}" target="_blank">Ver Imagen</a></td>
-            <td>
-                <button class="btn btn-warning btn-sm" onclick="cargarEditar(${p.id}, '${p.nombre}', ${p.cantidad}, '${p.imagen}')">Editar</button>
-                <button class="btn btn-danger btn-sm" onclick="borrar(${p.id})">Eliminar</button>
-            </td>
-        </tr>`;
-    });
+  lista.innerHTML = "";
 
-    document.getElementById("tabla").innerHTML = html;
-}
+  datos.forEach(p => {
+    lista.innerHTML += `
+      <div class="item">
+        <img src="${p.imagen}" />
+        <p><b>${p.nombre}</b></p>
+        <p>Cantidad: ${p.cantidad}</p>
 
-async function agregar() {
-    const nombre = document.getElementById("nombre").value;
-    const cantidad = document.getElementById("cantidad").value;
-    const imagen = document.getElementById("imagen").value;
-
-    const metodo = editando ? "PUT" : "POST";
-    const url = editando ? `${API}/${editando}` : API;
-
-    await fetch(url, {
-        method: metodo,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, cantidad, imagen })
-    });
-
-    limpiarFormulario();
-    editando = null;
-    cargar();
-}
-
-function cargarEditar(id, nombre, cantidad, imagen) {
-    editando = id;
-    document.getElementById("nombre").value = nombre;
-    document.getElementById("cantidad").value = cantidad;
-    document.getElementById("imagen").value = imagen;
-}
-
-async function borrar(id) {
-    await fetch(`${API}/${id}`, { method: "DELETE" });
-    cargar();
-}
-
-function limpiarFormulario() {
-    document.getElementById("nombre").value = "";
-    document.getElementById("cantidad").value = "";
-    document.getElementById("imagen").value = "";
+        <button onclick="editar(${p.id}, '${p.nombre}', ${p.cantidad}, '${p.imagen}')">Editar</button>
+        <button onclick="eliminar(${p.id})">Eliminar</button>
+      </div>
+    `;
+  });
 }
 
 cargar();
+
+// ------------------ AGREGAR ------------------
+
+async function agregar() {
+  const id = document.getElementById("edit-id").value;
+  const nombre = document.getElementById("nombre").value;
+  const cantidad = document.getElementById("cantidad").value;
+  const imagen = document.getElementById("imagen").value;
+
+  if (!nombre || !cantidad) return alert("Completa todos los campos");
+
+  const data = { nombre, cantidad, imagen };
+
+  let url = API;
+  let method = "POST";
+
+  if (id) {
+    url = `${API}/${id}`;
+    method = "PUT";
+  }
+
+  await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  limpiarCampos();
+  cargar();
+}
+
+// ------------------ EDITAR ------------------
+
+function editar(id, nombre, cantidad, imagen) {
+  document.getElementById("edit-id").value = id;
+  document.getElementById("nombre").value = nombre;
+  document.getElementById("cantidad").value = cantidad;
+  document.getElementById("imagen").value = imagen;
+}
+
+// ------------------ ELIMINAR ------------------
+
+async function eliminar(id) {
+  if (!confirm("¿Eliminar producto?")) return;
+
+  await fetch(`${API}/${id}`, { method: "DELETE" });
+
+  cargar();
+}
+
+// ------------------ LIMPIAR ------------------
+
+function limpiarCampos() {
+  document.getElementById("edit-id").value = "";
+  document.getElementById("nombre").value = "";
+  document.getElementById("cantidad").value = "";
+  document.getElementById("imagen").value = "";
+}
