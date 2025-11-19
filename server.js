@@ -1,83 +1,59 @@
 import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import mysql from "mysql2/promise";
+import mysql from "mysql2";
 import path from "path";
 import { fileURLToPath } from "url";
+import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-// ---- SERVIR ARCHIVOS DEL FRONTEND ----
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.static(path.join(__dirname, "public")));
+const app = express();
+app.use(express.json());
+app.use(express.static("public"));
 
-// -------- MYSQL CONNECTION -------------
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME
+// Conexión a MySQL (Railway)
+const db = mysql.createConnection({
+    host: process.env.MYSQLHOST,
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE,
+    port: process.env.MYSQLPORT
 });
 
-// Crear tabla si no existe
-async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS productos (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      nombre VARCHAR(255),
-      cantidad INT,
-      imagen TEXT
-    );
-  `);
-  console.log("✔ Base de datos lista");
-}
-initDB();
+db.connect(err => {
+    if (err) {
+        console.error("❌ Error al conectar a MySQL:", err);
+        return;
+    }
+    console.log("✅ Conectado a MySQL en Railway");
+});
 
-// ---------- RUTAS API ----------------
-
-// Obtener productos
-app.get("/api/productos", async (req, res) => {
-  const [rows] = await pool.query("SELECT * FROM productos ORDER BY id DESC");
-  res.json(rows);
+// Obtener inventario
+app.get("/api/inventario", (req, res) => {
+    db.query("SELECT * FROM inventario", (err, rows) => {
+        if (err) return res.status(500).json({ error: err });
+        res.json(rows);
+    });
 });
 
 // Agregar producto
-app.post("/api/productos", async (req, res) => {
-  const { nombre, cantidad, imagen } = req.body;
+app.post("/api/inventario", (req, res) => {
+    const { nombre, cantidad, imagen } = req.body;
 
-  await pool.query(
-    "INSERT INTO productos (nombre, cantidad, imagen) VALUES (?, ?, ?)",
-    [nombre, cantidad, imagen]
-  );
-
-  res.json({ message: "Producto agregado correctamente" });
+    db.query("INSERT INTO inventario (nombre, cantidad, imagen) VALUES (?, ?, ?)",
+        [nombre, cantidad, imagen],
+        (err, result) => {
+            if (err) return res.status(500).json({ error: err });
+            res.json({ message: "Producto agregado", id: result.insertId });
+        }
+    );
 });
 
-// Editar producto
-app.put("/api/productos/:id", async (req, res) => {
-  const { id } = req.params;
-  const { nombre, cantidad, imagen } = req.body;
-
-  await pool.query(
-    "UPDATE productos SET nombre=?, cantidad=?, imagen=? WHERE id=?",
-    [nombre, cantidad, imagen, id]
-  );
-
-  res.json({ message: "Producto actualizado" });
-});
-
-// Eliminar producto
-app.delete("/api/productos/:id", async (req, res) => {
-  await pool.query("DELETE FROM productos WHERE id=?", [req.params.id]);
-  res.json({ message: "Producto eliminado" });
-});
-
+// Puerto para Railway
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Servidor corriendo en " + PORT));
+
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
+});
