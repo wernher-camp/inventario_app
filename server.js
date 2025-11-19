@@ -1,49 +1,74 @@
 import express from "express";
-import mysql from "mysql2";
 import cors from "cors";
-import dotenv from "dotenv";
-dotenv.config();
+import sqlite3 from "sqlite3";
+import { open } from "sqlite";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
 
-const db = mysql.createConnection({
-    host: process.env.MYSQLHOST,
-    user: process.env.MYSQLUSER,
-    password: process.env.MYSQLPASSWORD,
-    database: process.env.MYSQLDATABASE,
-    port: process.env.MYSQLPORT
-});
+// ---- BASE DE DATOS ----
+let db;
+(async () => {
+  db = await open({
+    filename: "./inventario.db",
+    driver: sqlite3.Database
+  });
 
-// Obtener productos
-app.get("/api/productos", (req, res) => {
-    db.query("SELECT * FROM productos", (err, results) => {
-        if (err) return res.status(500).json({ error: err });
-        res.json(results);
-    });
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS productos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT,
+      cantidad INTEGER,
+      imagen TEXT
+    );
+  `);
+})();
+
+// ---- RUTAS ----
+
+// Listar productos
+app.get("/api/productos", async (req, res) => {
+  const rows = await db.all("SELECT * FROM productos");
+  res.json(rows);
 });
 
 // Agregar producto
-app.post("/api/productos", (req, res) => {
-    const { nombre, descripcion, precio, imagen_url, stock } = req.body;
-    const sql = "INSERT INTO productos (nombre, descripcion, precio, imagen_url, stock) VALUES (?, ?, ?, ?, ?)";
-    db.query(sql, [nombre, descripcion, precio, imagen_url, stock], (err, result) => {
-        if (err) return res.status(500).json({ error: err });
-        res.json({ message: "Producto agregado", id: result.insertId });
-    });
+app.post("/api/productos", async (req, res) => {
+  const { nombre, cantidad, imagen } = req.body;
+
+  if (!nombre || !cantidad) {
+    return res.status(400).json({ error: "Faltan datos" });
+  }
+
+  await db.run(
+    "INSERT INTO productos (nombre, cantidad, imagen) VALUES (?,?,?)",
+    [nombre, cantidad, imagen || ""]
+  );
+
+  res.json({ message: "Producto agregado" });
 });
 
-// Eliminar
-app.delete("/api/productos/:id", (req, res) => {
-    const { id } = req.params;
-    db.query("DELETE FROM productos WHERE id = ?", [id], (err) => {
-        if (err) return res.status(500).json({ error: err });
-        res.json({ message: "Producto eliminado" });
-    });
+// Editar producto
+app.put("/api/productos/:id", async (req, res) => {
+  const { id } = req.params;
+  const { nombre, cantidad, imagen } = req.body;
+
+  await db.run(
+    "UPDATE productos SET nombre=?, cantidad=?, imagen=? WHERE id=?",
+    [nombre, cantidad, imagen || "", id]
+  );
+
+  res.json({ message: "Producto actualizado" });
 });
 
-app.listen(process.env.PORT || 3000, () =>
-    console.log("Servidor encendido")
-);
+// Borrar producto
+app.delete("/api/productos/:id", async (req, res) => {
+  const { id } = req.params;
+  await db.run("DELETE FROM productos WHERE id=?", [id]);
+  res.json({ message: "Producto eliminado" });
+});
+
+// ---- SERVIDOR ----
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Servidor en puerto " + PORT));
