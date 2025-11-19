@@ -1,25 +1,22 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Inventario</title>
-  <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="estilos.css">
+    <meta charset="UTF-8">
+    <title>Inventario</title>
 </head>
 <body>
 
-  <h1>Inventario</h1>
+<h1>Inventario General</h1>
 
-  <div class="form-box">
-    <input id="nombre" placeholder="Nombre del producto">
-    <input id="cantidad" type="number" placeholder="Cantidad">
-    <input id="imagen" placeholder="URL de imagen">
-    <button onclick="agregar()">Agregar</button>
+<div id="productos"></div>
 
-    <input type="hidden" id="edit-id">
-  </div>
+<h2>Agregar producto</h2>
+<input id="nombre" placeholder="Nombre">
+<input id="cantidad" type="number" placeholder="Cantidad">
+<input id="imagen" placeholder="URL de imagen en la nube">
+<button onclick="agregar()">Agregar</button>
 
-  <div id="lista"></div>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
