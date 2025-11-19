@@ -13,13 +13,18 @@
 </header>
 
 <section id="formulario">
-    <h2>Agregar Producto</h2>
+    <h2>Agregar / Editar Producto</h2>
+
+    <input id="edit_id" type="hidden">
+
     <input id="nombre" placeholder="Nombre">
     <input id="descripcion" placeholder="Descripción">
     <input id="precio" type="number" placeholder="Precio">
     <input id="imagen_url" placeholder="URL de imagen (nube)">
     <input id="stock" type="number" placeholder="Stock">
-    <button onclick="agregar()">Agregar</button>
+
+    <button id="btnAgregar" onclick="agregar()">Agregar</button>
+    <button id="btnEditar" onclick="guardarEdicion()" style="display:none;">Guardar cambios</button>
 </section>
 
 <section>
