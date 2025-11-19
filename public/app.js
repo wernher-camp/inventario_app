@@ -1,32 +1,45 @@
+const API = "/api/productos";
+
 async function cargar() {
-    const res = await fetch("/api/inventario");
+    const res = await fetch(API);
     const data = await res.json();
 
-    const contenedor = document.getElementById("productos");
-    contenedor.innerHTML = "";
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
 
     data.forEach(p => {
-        contenedor.innerHTML += `
+        lista.innerHTML += `
             <div class="card">
-                <img src="${p.imagen}" alt="">
+                <img src="${p.imagen_url}" alt="imagen">
                 <h3>${p.nombre}</h3>
-                <p>Cantidad: ${p.cantidad}</p>
+                <p>${p.descripcion}</p>
+                <p><b>$${p.precio}</b> | Stock: ${p.stock}</p>
+                <button onclick="eliminar(${p.id})">Eliminar</button>
             </div>
         `;
     });
 }
 
 async function agregar() {
-    const nombre = document.getElementById("nombre").value;
-    const cantidad = document.getElementById("cantidad").value;
-    const imagen = document.getElementById("imagen").value;
+    const producto = {
+        nombre: nombre.value,
+        descripcion: descripcion.value,
+        precio: precio.value,
+        imagen_url: imagen_url.value,
+        stock: stock.value
+    };
 
-    await fetch("/api/inventario", {
+    await fetch(API, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({nombre, cantidad, imagen})
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(producto)
     });
 
+    cargar();
+}
+
+async function eliminar(id) {
+    await fetch(`${API}/${id}`, { method: "DELETE" });
     cargar();
 }
 
