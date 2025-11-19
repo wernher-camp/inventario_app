@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mysql from "mysql2/promise";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
@@ -9,10 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ---- SERVIR FRONTEND ----
-import path from "path";
-import { fileURLToPath } from "url";
-
+// ---- SERVIR ARCHIVOS DEL FRONTEND ----
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -39,7 +38,6 @@ async function initDB() {
   `);
   console.log("✔ Base de datos lista");
 }
-
 initDB();
 
 // ---------- RUTAS API ----------------
@@ -77,13 +75,9 @@ app.put("/api/productos/:id", async (req, res) => {
 
 // Eliminar producto
 app.delete("/api/productos/:id", async (req, res) => {
-  const { id } = req.params;
-
-  await pool.query("DELETE FROM productos WHERE id=?", [id]);
-
+  await pool.query("DELETE FROM productos WHERE id=?", [req.params.id]);
   res.json({ message: "Producto eliminado" });
 });
 
-// ----------- SERVIDOR ---------------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Servidor corriendo en " + PORT));
