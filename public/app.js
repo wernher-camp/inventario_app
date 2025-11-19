@@ -1,46 +1,63 @@
-const API = "/api/productos";
+const API = "https://inventarioapp-production-7e45.up.railway.app/api/productos";
+let editando = null;
 
 async function cargar() {
     const res = await fetch(API);
     const data = await res.json();
 
-    const lista = document.getElementById("lista");
-    lista.innerHTML = "";
-
+    let html = "";
     data.forEach(p => {
-        lista.innerHTML += `
-            <div class="card">
-                <img src="${p.imagen_url}" alt="imagen">
-                <h3>${p.nombre}</h3>
-                <p>${p.descripcion}</p>
-                <p><b>$${p.precio}</b> | Stock: ${p.stock}</p>
-                <button onclick="eliminar(${p.id})">Eliminar</button>
-            </div>
-        `;
+        html += `
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.nombre}</td>
+            <td>${p.cantidad}</td>
+            <td><a href="${p.imagen}" target="_blank">Ver Imagen</a></td>
+            <td>
+                <button class="btn btn-warning btn-sm" onclick="cargarEditar(${p.id}, '${p.nombre}', ${p.cantidad}, '${p.imagen}')">Editar</button>
+                <button class="btn btn-danger btn-sm" onclick="borrar(${p.id})">Eliminar</button>
+            </td>
+        </tr>`;
     });
+
+    document.getElementById("tabla").innerHTML = html;
 }
 
 async function agregar() {
-    const producto = {
-        nombre: nombre.value,
-        descripcion: descripcion.value,
-        precio: precio.value,
-        imagen_url: imagen_url.value,
-        stock: stock.value
-    };
+    const nombre = document.getElementById("nombre").value;
+    const cantidad = document.getElementById("cantidad").value;
+    const imagen = document.getElementById("imagen").value;
 
-    await fetch(API, {
-        method: "POST",
+    const metodo = editando ? "PUT" : "POST";
+    const url = editando ? `${API}/${editando}` : API;
+
+    await fetch(url, {
+        method: metodo,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(producto)
+        body: JSON.stringify({ nombre, cantidad, imagen })
     });
 
+    limpiarFormulario();
+    editando = null;
     cargar();
 }
 
-async function eliminar(id) {
+function cargarEditar(id, nombre, cantidad, imagen) {
+    editando = id;
+    document.getElementById("nombre").value = nombre;
+    document.getElementById("cantidad").value = cantidad;
+    document.getElementById("imagen").value = imagen;
+}
+
+async function borrar(id) {
     await fetch(`${API}/${id}`, { method: "DELETE" });
     cargar();
+}
+
+function limpiarFormulario() {
+    document.getElementById("nombre").value = "";
+    document.getElementById("cantidad").value = "";
+    document.getElementById("imagen").value = "";
 }
 
 cargar();
