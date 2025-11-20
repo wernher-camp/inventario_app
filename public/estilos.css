@@ -13,6 +13,7 @@ header {
 }
 
 #formulario {
+  text-align: center;
     padding: 20px;
     background: #fff;
     margin: 20px;
@@ -20,7 +21,8 @@ header {
 }
 
 input, button {
-    width: 100%;
+  text-align: center;
+    width: 50%;
     padding: 12px;
     margin: 8px 0;
 }
